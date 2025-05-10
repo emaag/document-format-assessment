@@ -1,8 +1,3 @@
-
-Built by https://www.blackbox.ai
-
----
-
 # Document Format Assessment Project
 
 ## Project Overview
