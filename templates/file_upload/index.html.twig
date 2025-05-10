@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    
+    {# Include Bootstrap CSS #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    {# Include Font Awesome for icons #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        .upload-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+        
+        .drag-drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        
+        .drag-drop-zone:hover {
+            border-color: #0d6efd;
+            background-color: #f1f5ff;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        #file-input {
+            display: none;
+        }
+        
+        .file-info {
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="upload-container">
+            <h2 class="text-center mb-4">File Upload</h2>
+            
+            {# Flash Messages #}
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+            
+            <form action="{{ path('file_upload_post') }}" method="post" enctype="multipart/form-data" id="upload-form">
+                <div class="drag-drop-zone" id="drag-drop-zone">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <p class="mb-2">Drag and drop your file here</p>
+                    <p class="text-muted mb-3">or</p>
+                    <label for="file-input" class="btn btn-primary">
+                        Choose File
+                    </label>
+                    <input type="file" name="file" id="file-input" class="form-control" required>
+                </div>
+                
+                <div class="file-info mt-3" id="file-info">
+                    <div class="alert alert-info">
+                        <i class="fas fa-file me-2"></i>
+                        Selected file: <span id="file-name"></span>
+                        <button type="button" class="btn btn-link text-danger p-0 float-end" id="remove-file">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-success" id="upload-button" disabled>
+                        <i class="fas fa-upload me-2"></i>Upload File
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Include Bootstrap JS and its dependencies #}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropZone = document.getElementById('drag-drop-zone');
+            const fileInput = document.getElementById('file-input');
+            const fileInfo = document.getElementById('file-info');
+            const fileName = document.getElementById('file-name');
+            const uploadButton = document.getElementById('upload-button');
+            const removeFile = document.getElementById('remove-file');
+
+            // Handle drag and drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight(e) {
+                dropZone.classList.add('border-primary');
+            }
+
+            function unhighlight(e) {
+                dropZone.classList.remove('border-primary');
+            }
+
+            dropZone.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                fileInput.files = files;
+                updateFileInfo();
+            }
+
+            // Handle file selection
+            fileInput.addEventListener('change', updateFileInfo);
+
+            function updateFileInfo() {
+                if (fileInput.files.length > 0) {
+                    fileName.textContent = fileInput.files[0].name;
+                    fileInfo.style.display = 'block';
+                    uploadButton.disabled = false;
+                } else {
+                    fileInfo.style.display = 'none';
+                    uploadButton.disabled = true;
+                }
+            }
+
+            // Handle file removal
+            removeFile.addEventListener('click', function() {
+                fileInput.value = '';
+                updateFileInfo();
+            });
+        });
+    </script>
+</body>
+</html>
